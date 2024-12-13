@@ -27,19 +27,9 @@ infix 3 _≤lex_
 
 data _≤lex_ : List ℕ → List ℕ → Set where
   {- declare the constructors! -}
-    -- Case 1: Two empty lists are trivially lexicographically equal
-  lexEq : (xs : List ℕ) → xs ≤lex xs
-  
-  -- Case 2: An empty list is less than any non-empty list
-  lexLtEmpty : (xs ys : List ℕ) → xs ≤lex (y ∷ ys)
-
-  -- Case 3: If the head elements are equal, recurse on the tails
-  lexEqTail : (x y : ℕ) → (xs ys : List ℕ) → x ≡ y → xs ≤lex ys → x ∷ xs ≤lex y ∷ ys
-
-  -- Case 4: If the head of the first list is smaller, then the first list is less
-  lexLtHead : (x y : ℕ) → (xs ys : List ℕ) → x ≤ y → x ∷ xs ≤lex y ∷ ys
-
-
+  nil : {xs : List ℕ} → [] ≤lex xs
+  eq : {x : ℕ} → {xs ys : List ℕ} → xs ≤lex ys → x ∷ xs ≤lex x ∷ ys 
+  lt : {x y : ℕ} → {xs ys : List ℕ} → x ≤ y → ¬ x ≡ y → x ∷ xs ≤lex y ∷ ys
   
 -- 2. 
 
@@ -55,19 +45,28 @@ Prove that lexicographic order is a partial order, that is, it is
 -}
 
 ≤lex-refl : {xs : List ℕ} → xs ≤lex xs
--- ≤lex-refl {xs} = {!!} 
-≤lex-refl {xs} = lexEq xs
+≤lex-refl {[]} = nil
+≤lex-refl {x₁ ∷ xs} = eq ≤lex-refl 
 
 <-trans : {x y z : ℕ} → x ≤ y → ¬ x ≡ y → y ≤ z → ¬ x ≡ z
-<-trans p n q r = {!!}
-
-
+<-trans z≤n n z≤n refl = n refl
+<-trans (s≤s p) n (s≤s q) refl = ⊥-elim (n (≤-antisym (s≤s p) (s≤s q)))
 
 ≤lex-trans : {xs ys zs : List ℕ} → xs ≤lex ys → ys ≤lex zs → xs ≤lex zs
-≤lex-trans p q = {!!} 
+≤lex-trans nil nil = nil
+≤lex-trans nil (eq q) = nil
+≤lex-trans nil (lt x₁ x₂) = nil
+≤lex-trans (eq p) (eq q) = eq (≤lex-trans p q)
+≤lex-trans (eq p) (lt x₁ x₂) = lt x₁ x₂
+≤lex-trans (lt x₁ x₂) (eq q) = lt x₁ x₂
+≤lex-trans (lt x₁ x₂) (lt x₃ x₄) = lt (≤-trans x₁ x₃) (<-trans x₁ x₂ x₃)
 
 ≤lex-antisym : {xs ys : List ℕ} → xs ≤lex ys → ys ≤lex xs → xs ≡ ys
--- ≤lex-antisym p q = {!!}
+≤lex-antisym nil nil = refl
+≤lex-antisym (eq p) (eq q) = cong (_∷_ _) (≤lex-antisym p q)
+≤lex-antisym (eq p) (lt x₁ x₂) = (⊥-elim (x₂ refl))
+≤lex-antisym (lt x₁ x₂) (eq q) = (⊥-elim (x₂ refl))
+≤lex-antisym (lt x₁ x₂) (lt x₃ x₄) = ⊥-elim (x₄ (≤-antisym x₃ x₁))
 
 -- 3. 
 
@@ -80,11 +79,17 @@ Prove the following interplay between lexicographic order and appending:
 -}
 
 ≤lex-++ : {xs ys zs : List ℕ} → xs ≤lex ys → xs ≤lex ys ++ zs
-≤lex-++ p = {!!} 
+≤lex-++ nil = nil
+≤lex-++ (eq p) = eq (≤lex-++ p)
+≤lex-++ (lt x₁ x₂) = lt x₁ x₂
 
 
 ++-≤lex : {xs ys zs : List ℕ} → ys ≤lex zs → xs ++ ys ≤lex xs ++ zs
-++-≤lex {xs} p = {!!}
+++-≤lex {[]} nil = nil
+++-≤lex {x₁ ∷ xs} nil = eq (++-≤lex nil)
+++-≤lex {[]} (eq p) = ++-≤lex p
+++-≤lex {x₁ ∷ xs} (p) = eq (++-≤lex p)
+++-≤lex {[]} (lt x₁ x₂) = lt x₁ x₂
 
 
 -- 4. 
@@ -99,10 +104,15 @@ This is provable with a lemma about insert.
 -}
 
 insert-≤lex : (x : ℕ) → (xs : List ℕ) → insert x xs ≤lex x ∷ xs
-insert-≤lex x xs = {!!}
+insert-≤lex x [] = eq nil
+insert-≤lex x (x₁ ∷ xs) with x ≤? x₁
+... | yes p = eq (eq ≤lex-refl)
+... | no p = lt (≤-total p) ({! !})
 
 sort-≤lex : (xs : List ℕ) → insertion-sort xs ≤lex xs
-sort-≤lex xs = {!!} 
+sort-≤lex [] = nil
+sort-≤lex (x₁ ∷ xs) = {!  !} 
+
 
 {-
 
@@ -133,5 +143,5 @@ does not need decidability of the order, involving more lemmas.
 
 ≈-sorted-≤lex : {xs ys : List ℕ} → xs ≈ ys → Sorted ys → ys ≤lex xs
 ≈-sorted-≤lex {xs} {ys} q s = {!!} 
-
--}
+      
+-}    
