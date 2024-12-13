@@ -62,10 +62,10 @@ Prove that lexicographic order is a partial order, that is, it is
 
 ≤lex-antisym : {xs ys : List ℕ} → xs ≤lex ys → ys ≤lex xs → xs ≡ ys
 ≤lex-antisym nil nil = refl
-≤lex-antisym (eq p) (eq q) = ≤lex-antisym (eq p) (eq q)
-≤lex-antisym (eq p) (lt x₁ x₂) = ≤lex-antisym (eq p) (lt x₁ x₂)
-≤lex-antisym (lt x₁ x₂) (eq q) = ≤lex-antisym (lt x₁ x₂) (eq q)
-≤lex-antisym (lt x₁ x₂) (lt x₃ x₄) = ≤lex-antisym (lt x₁ x₂) (lt x₃ x₄)
+≤lex-antisym (eq p) (eq q) = cong (_∷_ _) (≤lex-antisym p q)
+≤lex-antisym (eq p) (lt x₁ x₂) = (⊥-elim (x₂ refl))
+≤lex-antisym (lt x₁ x₂) (eq q) = (⊥-elim (x₂ refl))
+≤lex-antisym (lt x₁ x₂) (lt x₃ x₄) = ⊥-elim (x₄ (≤-antisym x₃ x₁))
 
 -- 3. 
 
@@ -85,14 +85,10 @@ Prove the following interplay between lexicographic order and appending:
 
 ++-≤lex : {xs ys zs : List ℕ} → ys ≤lex zs → xs ++ ys ≤lex xs ++ zs
 ++-≤lex {[]} nil = nil
-++-≤lex {[]} (eq p) = eq p
-++-≤lex {[]} (lt x₁ x₂) = lt x₁ x₂
 ++-≤lex {x₁ ∷ xs} nil = eq (++-≤lex nil)
-++-≤lex {x₁ ∷ xs} (eq nil) = eq (++-≤lex (eq nil))
-++-≤lex {x₁ ∷ []} (eq (eq x₂)) = ++-≤lex x₂
-++-≤lex {x₁ ∷ x₃ ∷ xs} (eq (eq x₂)) = eq (eq (++-≤lex (++-≤lex x₂))) 
-++-≤lex {x₁ ∷ xs} (eq (lt x₂ x₃)) = eq (++-≤lex (eq (lt x₂ x₃)))
-++-≤lex {x₁ ∷ xs} (lt x₂ x₃) = eq (++-≤lex (lt x₂ x₃))
+++-≤lex {[]} (eq p) = ++-≤lex p
+++-≤lex {x₁ ∷ xs} (p) = eq (++-≤lex p)
+++-≤lex {[]} (lt x₁ x₂) = lt x₁ x₂
 
 
 -- 4. 
@@ -107,9 +103,10 @@ This is provable with a lemma about insert.
 -}
 
 insert-≤lex : (x : ℕ) → (xs : List ℕ) → insert x xs ≤lex x ∷ xs
-insert-≤lex zero [] = eq nil
-insert-≤lex zero (x₁ ∷ xs) = eq (eq ≤lex-refl)
-insert-≤lex (suc x₁) xs = {!   !}
+insert-≤lex x [] = eq nil
+insert-≤lex x (x₁ ∷ xs) with x ≤? x₁
+... | yes p = ≤lex-refl
+... | no p = lt (≤-total p) λ x → {!   !}
 
 sort-≤lex : (xs : List ℕ) → insertion-sort xs ≤lex xs
 sort-≤lex [] = nil
@@ -148,3 +145,4 @@ does not need decidability of the order, involving more lemmas.
   
 -}      
         
+ 
