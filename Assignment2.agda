@@ -49,7 +49,8 @@ Prove that lexicographic order is a partial order, that is, it is
 ≤lex-refl {x₁ ∷ xs} = eq ≤lex-refl 
 
 <-trans : {x y z : ℕ} → x ≤ y → ¬ x ≡ y → y ≤ z → ¬ x ≡ z
-<-trans p n q r = {! !} 
+<-trans z≤n n z≤n refl = n refl
+<-trans (s≤s p) n (s≤s q) refl = ⊥-elim (n (≤-antisym (s≤s p) (s≤s q)))
 
 ≤lex-trans : {xs ys zs : List ℕ} → xs ≤lex ys → ys ≤lex zs → xs ≤lex zs
 ≤lex-trans nil nil = nil
@@ -105,13 +106,13 @@ This is provable with a lemma about insert.
 insert-≤lex : (x : ℕ) → (xs : List ℕ) → insert x xs ≤lex x ∷ xs
 insert-≤lex x [] = eq nil
 insert-≤lex x (x₁ ∷ xs) with x ≤? x₁
-... | yes p = ≤lex-refl
-... | no p = lt (≤-total p) λ x → {!   !}
+... | yes p = eq (eq ≤lex-refl)
+... | no p = lt (≤-total p) ({! !})
 
 sort-≤lex : (xs : List ℕ) → insertion-sort xs ≤lex xs
 sort-≤lex [] = nil
-sort-≤lex (x₁ ∷ []) = eq nil
-sort-≤lex (x₁ ∷ x₂ ∷ xs) = {! !}
+sort-≤lex (x₁ ∷ xs) = {!  !} 
+
 
 {-
 
@@ -142,7 +143,5 @@ does not need decidability of the order, involving more lemmas.
 
 ≈-sorted-≤lex : {xs ys : List ℕ} → xs ≈ ys → Sorted ys → ys ≤lex xs
 ≈-sorted-≤lex {xs} {ys} q s = {!!} 
-  
--}      
-        
- 
+      
+-}    
